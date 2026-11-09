@@ -1,0 +1,23 @@
+# 네트워크·키 없이 전체 테스트가 돈다.
+name: ci
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"   # 매주 월요일 — 의존성·런타임이 바뀌어 깨지지 않았는지 정기 확인
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install ${{ matrix.python }}
+      - run: uv sync --locked --python ${{ matrix.python }}
+      - run: uv run --python ${{ matrix.python }} pytest -q
+      - run: uv run --python ${{ matrix.python }} python scripts/calibrate.py
+      - run: uv run --python ${{ matrix.python }} python scripts/bench.py --docs 300 --chars 3000

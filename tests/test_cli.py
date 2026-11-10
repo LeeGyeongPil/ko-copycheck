@@ -56,3 +56,41 @@ def test_dice_hint_matches_default_and_exit_codes(tmp_path, capsys):
     assert main(["pair", "a", "b", "--dice", "2"]) == 2
     assert "try --dice 0.3" in capsys.readouterr().err
     assert main(["extract", str(tmp_path / "missing.txt")]) == 2
+
+
+def _hwp_folder(tmp_path):
+    folder = tmp_path / "subs"
+    shutil.copytree(EXAMPLE, folder)
+    (folder / "c_student.hwp").write_bytes(b"\xd0\xcf\x11\xe0fake")
+    return folder
+
+
+def test_scan_reports_hwp_as_failed_row(tmp_path, capsys):
+    folder = _hwp_folder(tmp_path)
+    out = tmp_path / "report"
+    assert main(["scan", str(folder), "--prompt", str(folder / "prompt.txt"), "--out", str(out)]) == 0
+    text = capsys.readouterr().out
+    assert "FAILED c_student.hwp" in text and "save as .hwpx or .pdf" in text
+    import json
+    failures = json.loads((out / "pairs.json").read_text(encoding="utf-8"))["failures"]
+    assert any("c_student.hwp" in json.dumps(f, ensure_ascii=False) for f in failures)
+    assert "c_student.hwp" in (out / "index.html").read_text(encoding="utf-8")
+
+
+def test_scan_ignores_hidden_and_temp_hwp(tmp_path, capsys):
+    folder = _hwp_folder(tmp_path)
+    (folder / "c_student.hwp").unlink()
+    (folder / "~$c.hwp").write_bytes(b"x")
+    (folder / ".c.hwp").write_bytes(b"x")
+    assert main(["scan", str(folder), "--prompt", str(folder / "prompt.txt"), "--out", str(tmp_path / "r")]) == 0
+    cap = capsys.readouterr()
+    assert "FAILED" not in cap.out and "skipped" not in cap.err
+
+
+def test_scan_notes_skipped_unsupported_files(tmp_path, capsys):
+    folder = _hwp_folder(tmp_path)
+    (folder / "notes.xyz").write_bytes(b"x")
+    assert main(["scan", str(folder), "--prompt", str(folder / "prompt.txt"), "--out", str(tmp_path / "r")]) == 0
+    cap = capsys.readouterr()
+    assert "skipped 1 files with unsupported extensions (supported: .txt, .docx, .hwpx, .pdf)" in cap.err
+    assert "FAILED notes.xyz" not in cap.out

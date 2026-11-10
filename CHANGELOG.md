@@ -5,6 +5,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-11-10
+
+### Fixed
+- `scan` now reports binary `.hwp` files as `FAILED` rows (same hint as `extract`) instead of silently dropping them; they also appear in `pairs.json` and `index.html`.
+
+### Added
+- `scan` prints one stderr line with the number of files skipped for other unsupported extensions.
+
 ## [0.1.1]
 
 ### Changed

@@ -67,10 +67,16 @@ def _say(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
-def _collect(folder: Path, recursive: bool, exclude: set[Path]) -> list[Path]:
+def _collect(folder: Path, recursive: bool, exclude: set[Path]) -> tuple[list[Path], int]:
+    """Return (files to compare, number of files skipped for an unsupported extension).
+
+    ``.hwp`` is kept so the extractor reports it as a FAILED row with its usual hint
+    instead of dropping it silently. Hidden and ``~$`` temporary files are never counted.
+    """
     it = folder.rglob("*") if recursive else folder.glob("*")
-    files = [p for p in it if p.is_file() and p.suffix.lower() in SUPPORTED and not p.name.startswith((".", "~$"))]
-    return sorted(p for p in files if p.resolve() not in exclude)
+    files = [p for p in it if p.is_file() and not p.name.startswith((".", "~$")) and p.resolve() not in exclude]
+    keep = [p for p in files if p.suffix.lower() in SUPPORTED or p.suffix.lower() == ".hwp"]
+    return sorted(keep), len(files) - len(keep)
 
 
 def _extract_all(paths: list[Path], names: list[str], timeout: float, min_chars: int = 0) -> tuple[dict[str, str], list[Failure]]:
@@ -136,7 +142,9 @@ def cmd_scan(a: argparse.Namespace) -> int:
     if prompts is None:
         return EXIT_ERROR
     exclude = {Path(p).resolve() for p in a.prompt}
-    paths = _collect(a.folder, a.recursive, exclude)
+    paths, skipped = _collect(a.folder, a.recursive, exclude)
+    if skipped:
+        _say(f"skipped {skipped} files with unsupported extensions (supported: {', '.join(SUPPORTED)})")
     names = [p.relative_to(a.folder).as_posix() for p in paths]
     if len(paths) < 2:
         _say(f"error: need at least 2 files ({', '.join(SUPPORTED)}) in {a.folder}, found {len(paths)}. Try --recursive.")

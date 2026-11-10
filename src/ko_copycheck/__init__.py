@@ -7,5 +7,5 @@ from .engine import compare
 from .config import Config
 from .score import Report
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __all__ = ["compare", "Config", "Report", "__version__"]

@@ -1,6 +1,6 @@
 [project]
 name = "ko-copycheck"
-version = "0.1.0"
+version = "0.1.1"
 description = "Offline plagiarism checker for Korean prose submissions: verbatim winnowing plus paraphrase sentence similarity, static HTML report."
 readme = "README.md"
 license = "MIT"

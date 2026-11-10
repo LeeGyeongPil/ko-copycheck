@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.1]
+
+### Changed
+- README "compare with other tools" table replaced by a short "when to use" section.
+
 ## [0.1.0]
 
 ### Added

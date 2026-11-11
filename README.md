@@ -1,5 +1,7 @@
 # ko-copycheck
 
+**한국어** | [English](README.en.md)
+
 > **English summary** — An offline plagiarism checker for Korean prose submissions. Point it at a folder of txt, docx, hwpx and pdf files and it writes a ranked table of "who overlaps with whom" plus side-by-side HTML pages; nothing is uploaded. It combines winnowing (verbatim copies) with sentence character-bigram Dice similarity (paraphrases), and it ignores the assignment prompt and passages most students quote. Install: `uv tool install git+https://github.com/LeeGyeongPil/ko-copycheck`, run: `ko-copycheck scan <folder> --prompt prompt.txt`. The score is a hint for where a human should look, not a verdict.
 
 과제 제출물 폴더를 한 번에 서로 비교해 **"누가 누구와 얼마나 겹치나"** 순위표와, 의심 쌍을 나란히 보여 주는 HTML 보고서를 만드는 오프라인 도구입니다. 파일은 어디로도 전송되지 않습니다.

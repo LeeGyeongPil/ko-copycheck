@@ -44,7 +44,7 @@ b_copy.txt ~ c_paraphrase.txt        0.0% /   0.0%           5       71.7% /  61
 4 documents, 3 candidate pairs of 6, 0.003s
 report: report/index.html
 ```
-(The progress indicator `extract 1/4  failed 0` goes to stderr separately. `candidate pairs` is the number of pairs shown in the table, that is, pairs caught by the verbatim or paraphrase layer.)
+(The progress indicator `extract 1/4  failed 0` goes to stderr separately. With `--prompt`, an `extract 1/1  failed 0` line for reading that file comes first. `candidate pairs` is the number of pairs shown in the table, that is, pairs caught by the verbatim or paraphrase layer.)
 
 ![scan run screen](docs/images/02-scan.png)
 *Terminal summary (the screenshot was taken with the installed `ko-copycheck`; only the report path on the last line shows a temporary folder). The same table is also saved to `report/index.html`, `pairs.csv` and `pairs.json`.*
@@ -75,7 +75,7 @@ Open one suspicious pair and the overlapping parts are marked in color.
 | `--min-match` | Minimum number of characters counted as a verbatim match (default 20) | `--min-match 40` |
 | `--min-sentence` | Minimum sentence length used in the paraphrase comparison (normalized characters, default 10) | `--min-sentence 15` |
 | `--k`, `--w` | k-gram length (8), window size (4) | `--k 8 --w 4` |
-| `--group-ratio` | Passages shared by at least this fraction of documents are excluded as "common" (default 0.5, when there are 3 or more documents) | `--group-ratio 0.4` |
+| `--group-ratio` | Passages shared by at least max(3, ceil(ratio × document count)) documents are excluded as "common" (default 0.5, when there are 3 or more documents). Raise the value to exclude less. The summary shows when something was excluded | `--group-ratio 0.8` |
 | `--recursive` | Also reads subfolders | |
 | `--top N` | Builds side-by-side pages for at most N pairs (default 300) | |
 | `--timeout` | Time limit for reading a single file (seconds, default 60) | |
@@ -126,15 +126,19 @@ For a longer explanation and a small worked calculation, see [docs/algorithm.md]
 ## Limitations (honestly)
 - **The default Dice value of 0.30 is a starting point chosen from a small, hand-written calibration set.** It is the highest score of 0.14 for unrelated texts on the same topic plus a margin of 0.15, and on the same data it catches **only 12** of 25 paraphrased sentences. In other words, it misses a lot. Lowering it with `--dice 0.2` catches more but may also add false positives, so tune it on your own class's texts. You can reproduce the calibration with `uv run python scripts/calibrate.py`.
 - **hwpx and pdf were verified only with test files created by this repository.** It has not been verified with real Hancom Office hwpx files, real student docx files, or Korean pdf files. If reading looks doubtful, check with `extract` first. Scanned image PDFs contain no text and cannot be read.
-- Passages shared by more than half of three or more documents are treated as "common" and excluded, so real group copying by many people drops out of the score.
+- Passages shared by at least the document-count threshold (`--group-ratio`, minimum 3) are treated as "common" and excluded, so real group copying by many people drops out of the score. The scan summary (console, report, `stats` in `pairs.json`) shows how much was excluded. Passages from the task text given with `--prompt` are masked separately and are not counted.
 - On macOS, a memory limit cannot be applied to the extraction process, and only the time and size limits protect it.
 - The score is not a plagiarism verdict. Texts with citation marks also show up as overlap.
+
+![scan run showing the common-passage exclusion line](docs/images/05-scan-common.png)
+
+*A scan of five documents (b_copy duplicated once). The `common passages excluded` line under the summary shows how many fingerprints were dropped; with nothing excluded the line is not printed. The last `report:` line in the screenshot has its path replaced to hide a local path; a real run prints the path given to `--out`.*
 
 ## Roadmap
 - **M2 operational convenience**: fingerprint cache, `--against` (compare with a folder of reference material), a view of clusters where three or more people overlap, a larger calibration set.
 - **M3 optional features**: `[hwp]` (reading legacy hwp; the dependency pyhwp is AGPL-3.0+, so watch the license), `[embed]` (semantic similarity with local embeddings, off by default).
 
-Not implemented yet. The current version (0.1.2) is M1.
+Not implemented yet. The current version (0.1.3) is M1.
 
 ## Troubleshooting
 | Symptom | Cause | Fix |
@@ -150,7 +154,7 @@ Not implemented yet. The current version (0.1.2) is M1.
 
 ## Development and contributing
 ```bash
-uv run pytest -q   # 36 passed
+uv run pytest -q   # 42 passed
 ```
 Please leave bugs and suggestions as issues. The change log is [CHANGELOG.md](CHANGELOG.md) (Korean).
 

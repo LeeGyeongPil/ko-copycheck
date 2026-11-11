@@ -5,6 +5,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-11-12
+
+### Added
+- `scan` summary (console, `index.html`, `pairs.json` stats) now shows how much was excluded as group-common: `common_fingerprints`, `common_documents`, `common_threshold_docs`. Passages from the `--prompt` task text are masked separately and not counted. Scores and candidates are unchanged; the console line appears only when something was excluded.
+
 ## [0.1.2] - 2026-11-10
 
 ### Fixed

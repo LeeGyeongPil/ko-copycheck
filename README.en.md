@@ -2,9 +2,7 @@
 
 [한국어](README.md) | **English**
 
-An offline plagiarism checker for Korean prose submissions. Point it at a folder of txt, docx, hwpx and pdf files and it writes a ranked table of "who overlaps with whom" plus side-by-side HTML pages; nothing is uploaded. It combines winnowing (verbatim copies) with sentence character-bigram Dice similarity (paraphrases), and it ignores the assignment prompt and passages most students quote. Install: `uv tool install git+https://github.com/LeeGyeongPil/ko-copycheck`, run: `ko-copycheck scan <folder> --prompt prompt.txt`. The score is a hint for where a human should look, not a verdict.
-
-It is an offline tool that compares a whole folder of assignment submissions against each other in one pass and produces a ranked table of **"who overlaps with whom, and by how much"**, plus an HTML report that shows suspicious pairs side by side. No file is sent anywhere.
+An offline plagiarism checker for Korean prose submissions. Point it at a folder of txt, docx, hwpx and pdf files and it compares all submissions against each other in one pass, writing a ranked table of "who overlaps with whom, and by how much" plus side-by-side HTML pages for suspicious pairs; nothing is uploaded. It combines winnowing (verbatim copies) with sentence character-bigram Dice similarity (paraphrases), and it ignores the assignment prompt and passages most students quote. Install: `uv tool install git+https://github.com/LeeGyeongPil/ko-copycheck`, run: `ko-copycheck scan <folder> --prompt prompt.txt`. The score is a hint for where a human should look, not a verdict.
 
 ![Report front page: a table of document pairs sorted by overlap](docs/images/01-hero.png)
 *The index.html written by `scan`. Pairs are listed from the largest overlap down; click a name to open the side-by-side view.*

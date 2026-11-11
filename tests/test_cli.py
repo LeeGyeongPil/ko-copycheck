@@ -94,3 +94,34 @@ def test_scan_notes_skipped_unsupported_files(tmp_path, capsys):
     cap = capsys.readouterr()
     assert "skipped 1 files with unsupported extensions (supported: .txt, .docx, .hwpx, .pdf)" in cap.err
     assert "FAILED notes.xyz" not in cap.out
+
+
+def _five_docs(tmp_path):
+    folder = tmp_path / "subs"
+    shutil.copytree(EXAMPLE, folder)
+    shutil.copy(folder / "b_copy.txt", folder / "b_copy2.txt")  # 3 of 5 share the passage -> common
+    return folder
+
+
+def test_scan_reports_common_excluded(tmp_path, capsys):
+    folder = _five_docs(tmp_path)
+    out = tmp_path / "r"
+    assert main(["scan", str(folder), "--prompt", str(folder / "prompt.txt"), "--out", str(out)]) == 0
+    text = capsys.readouterr().out
+    assert "common passages excluded:" in text and "--group-ratio" in text
+    import json
+    stats = json.loads((out / "pairs.json").read_text(encoding="utf-8"))["stats"]
+    assert stats["common_fingerprints"] > 0 and stats["common_threshold_docs"] == 3
+    assert "공통 구절로 제외" in (out / "index.html").read_text(encoding="utf-8")
+
+
+def test_scan_four_docs_has_no_common_line(tmp_path, capsys):
+    folder = tmp_path / "subs"
+    shutil.copytree(EXAMPLE, folder)
+    out = tmp_path / "r"
+    assert main(["scan", str(folder), "--prompt", str(folder / "prompt.txt"), "--out", str(out)]) == 0
+    assert "common passages excluded" not in capsys.readouterr().out
+    import json
+    stats = json.loads((out / "pairs.json").read_text(encoding="utf-8"))["stats"]
+    assert stats["common_fingerprints"] == 0
+    assert "공통 구절로 제외" not in (out / "index.html").read_text(encoding="utf-8")

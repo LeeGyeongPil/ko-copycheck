@@ -165,6 +165,11 @@ def cmd_scan(a: argparse.Namespace) -> int:
         print(f"FAILED {f.name}: {f.reason}")
     s = report.stats
     print(f"\n{s['documents']} documents, {s['candidate_pairs']} candidate pairs of {s['all_pairs']}, {s['elapsed_seconds']}s")
+    if s["common_fingerprints"] > 0:
+        print(
+            f"common passages excluded: {s['common_fingerprints']} fingerprints in {s['common_documents']} documents "
+            f"(shared by >= {s['common_threshold_docs']} of {s['documents']} docs; tune with --group-ratio)"
+        )
     print(f"report: {index}")
     return EXIT_OK
 

@@ -178,12 +178,19 @@ def index_page(report: Report, shown: list[tuple[PairResult, str]]) -> str:
         ],
         "failures": [{"name": f.name, "reason": f.reason} for f in report.failures],
     }
+    common_note = ""
+    if s.get("common_fingerprints", 0) > 0:
+        common_note = (
+            f"<p>공통 구절로 제외: 지문 {s['common_fingerprints']}개 · 문서 {s['common_documents']}편"
+            f"({s['documents']}편 중 {s['common_threshold_docs']}편 이상이 공유, --group-ratio 로 조정)</p>"
+        )
     body = [
         '<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>ko-copycheck 보고서</title>',
         f"<style>{CSS}</style></head><body><h1>ko-copycheck 보고서</h1>",
         f'<p class="note">{DISCLAIMER} 파일은 어디로도 전송되지 않았습니다.</p>',
         f"<p>문서 {s['documents']}편 · 전체 쌍 {s['all_pairs']} · 후보 쌍 {s['candidate_pairs']} · "
         f"설정 k={cfg.k}, w={cfg.w}, 최소 일치 {cfg.min_match}자, Dice ≥ {cfg.dice:g} · 머리글을 눌러 정렬</p>",
+        common_note,
         "<table><thead><tr>"
         '<th data-k="rank">#</th><th data-k="left">왼쪽</th><th data-k="right">오른쪽</th>'
         '<th data-k="vlr">축자 L←R</th><th data-k="vrl">축자 R←L</th><th data-k="para">바꿔쓴 문장</th>'

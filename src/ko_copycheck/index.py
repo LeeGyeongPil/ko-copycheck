@@ -54,3 +54,25 @@ def candidate_hits(
             else:
                 hits[(d2, d1)].append((p2, p1))
     return hits
+
+
+def common_excluded(
+    fps: list[Fingerprints], df: Counter[int], cfg: Config, ignore: frozenset[int] | set[int] = frozenset()
+) -> tuple[int, int]:
+    """Count what the group-common filter skips: ``(fingerprints, documents)``.
+
+    A fingerprint hash is counted when it is a fingerprint in at least two documents but its
+    document frequency reaches :func:`group_threshold`, i.e. ``candidate_hits`` ignores it.
+    Hashes dropped only because of ``max_postings`` are not counted, and neither are hashes in
+    ``ignore`` (the engine passes the k-grams of the assignment prompt, which every document
+    shares by design and which are handled by the prompt mask). Read-only: scores and
+    candidates do not depend on this function.
+    """
+    threshold = group_threshold(len(fps), cfg)
+    owners: dict[int, set[int]] = defaultdict(set)
+    for doc, picks in enumerate(fps):
+        for h, _pos in picks:
+            owners[h].add(doc)
+    common = {h for h, docs in owners.items() if len(docs) >= 2 and df[h] >= threshold and h not in ignore}
+    touched = {doc for h in common for doc in owners[h]}
+    return len(common), len(touched)

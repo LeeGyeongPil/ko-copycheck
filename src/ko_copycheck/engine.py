@@ -7,7 +7,7 @@ from itertools import combinations
 from typing import Mapping, Sequence
 
 from .config import Config
-from .index import candidate_hits, document_frequency
+from .index import candidate_hits, common_excluded, document_frequency, group_threshold
 from .normalize import from_display_span, normalize
 from .paraphrase import Sentence, bigram_set, matches_prefix, split_sentences
 from .score import Doc, Failure, PairResult, ParaMatch, Report, finalize
@@ -48,6 +48,7 @@ def compare(
     prompt_fps = [winnow(kgram_hashes(p, cfg.k), cfg.w) for p in prompt_norms]
     df = document_frequency(hash_lists)
     del hash_lists
+    prompt_hashes = {h for p in prompt_norms for h in kgram_hashes(p, cfg.k)}
 
     docs: list[Doc] = []
     for name, norm, doc_fps in zip(names, norms, fps):
@@ -95,6 +96,7 @@ def compare(
     pairs.sort(key=lambda p: (-p.rank_key, -(p.score_lr + p.score_rl), p.left, p.right))
 
     n = len(docs)
+    common_fps, common_docs = common_excluded(fps, df, cfg, prompt_hashes)
     stats = {
         "documents": n,
         "all_pairs": n * (n - 1) // 2,
@@ -103,6 +105,10 @@ def compare(
         "sentences": len(sents),
         "sentence_candidates_compared": compared,
         "elapsed_seconds": round(time.perf_counter() - t0, 3),
+        # Group-common filter: what was left out of candidates (see index.common_excluded).
+        "common_fingerprints": common_fps,
+        "common_documents": common_docs,
+        "common_threshold_docs": group_threshold(n, cfg),
     }
     return Report({d.name: d for d in docs}, pairs, list(failures), cfg, stats, list(prompts))
 
